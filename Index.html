@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    <p>
+      Which platform?<br>
+      <input type="radio" name="platform" id ="platform_ios" value=1 checked> iOS
+      <input type="radio" name="platform" id ="platform_android" value=0 >Android
+    </p>
+    <p id="language">
+
+    </p>
+    <button onclick="refresh()">Refresh </button>
+    <button onclick="copyToClipboard('#copyData')">Copy to Clipboard</button>
+    <hr>
+    <p>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+      <div id="copyData" contenteditable="true">
+       Empty copy text
+      </div>
+    </p>
+    <?!= include('JavaScript'); ?>
+  </body>
+</html>
