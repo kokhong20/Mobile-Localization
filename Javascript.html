@@ -1,156 +1,163 @@
 <script>
-window.onload = function(){
-    google.script.run.withSuccessHandler(populateHTMLwith).getHeader();
-    google.script.run.withSuccessHandler(showData).getData();
-}
-
-function refresh(){
-   google.script.run.withSuccessHandler(showData).getData();
-}
-
-function populateHTMLwith(headerList){
-   var html = "Which language?<br>"
-
-   for(var currentHeader = 1; currentHeader < headerList.length; currentHeader++){
-      let checked = (currentHeader == 1) ? "checked": ""
-      html = html + "<input type=\"radio\" name=\"language\" value="+ currentHeader +" "+ checked+ ">" + headerList[currentHeader]
-   }
-   document.getElementById("language").innerHTML = html;
-}
-
-function showData(data){
-  var d = new Date();
-  var STRING_ID = 0
-  var STRING_LANGUAGE = getRadioValueBy("language") || 1
-  var selectedPlatformIsIOS = getRadioValueBy("platform") || 1
-  var output = ""
-  if(selectedPlatformIsIOS == 1){
-    //iOS
-    output = "// Last updated: " + d.toLocaleString() + "<br>"
-    for (var currentRow = 1; currentRow < data.length; currentRow++) {
-      var name = data[currentRow][STRING_ID]
-      var value = data[currentRow][STRING_LANGUAGE]
-      value = backSlashAndQuoteReplace(value)
-      value = iOSParamsReplace(value)
-      if (value.length > 0 && name.length > 0) {
-        // "key" = "value"; <br>
-        output = output + "\"" + name + "\" = \"" + value + "\";"
-        output = output + "<br>"
-      } else if (name.length > 0) {
-        //<br> Comment <br>
-        output = output + "<br>" + name + "<br>"
-      } else {
-        output = "EMPTY" + "<br>"
-      }
-      output = output + "<br>"
+    window.onload = function() {
+        google.script.run.withSuccessHandler(populateHTMLwith).getHeader();
+        google.script.run.withSuccessHandler(showData).getData();
     }
-  }else{
-    //Android
-    var lessThanString = "&#60;"
-    var greaterThanString = "&#62;"
-    var newLineString = "<br>"
-    var gtnewLineString = greaterThanString + newLineString
 
-    var output = lessThanString + "?xml version=\"1.0\" encoding=\"utf-8\"?" + gtnewLineString
-    output += lessThanString + "resources" + gtnewLineString
+    function refresh() {
+        google.script.run.withSuccessHandler(showData).getData();
+    }
 
-    var withinMultiLine = false
-    for (var currentRow = 1; currentRow < data.length; currentRow++) {
-      var currentValue = data[currentRow][STRING_ID]
-      var isEndOfMultiLine = isEndOfMultiLineComment(currentValue)
-      var isStartOfMultiLine = isStartOfMultiLineComment(currentValue)
+    function populateHTMLwith(headerList) {
+        var html = "Which language?<br>"
 
-      if (currentValue.length > 0) {
-        if (isEndOfMultiLine || withinMultiLine || isStartOfMultiLine) {
-          if (isStartOfMultiLine) {
-            withinMultiLine = true
-            output += "&#60;!-- "
-          }
+        for (var currentHeader = 1; currentHeader < headerList.length; currentHeader++) {
+            let checked = (currentHeader == 1) ? "checked" : ""
+            html = html + "<input type=\"radio\" name=\"language\" value=" + currentHeader + " " + checked + ">" + headerList[currentHeader]
+        }
+        document.getElementById("language").innerHTML = html;
+    }
 
-          output += data[currentRow][1] + "<br>"
+    function showData(data) {
+        var selectedPlatformRadio = getRadioValueBy("platform") || 1
+        var selectedPlatform = selectedPlatformRadio == 1 ? "iOS" : "Android";
+        var result = getFormattedData(data, selectedPlatform);
+        google.script.run.saveResult("BKash", result, selectedPlatform);
+        console.log(result)
+        document.getElementById("copyData").innerHTML = result;
+    }
 
-          if (isEndOfMultiLine) {
-            withinMultiLine = false
-            output += " --&#62;<br>"
-          }
-        } else if (isSingleLineComment(currentValue)) {
-          output += xmlCommentTag(data[currentRow][0]) + "<br>"
+    function getFormattedData(data, selectedPlatform) {
+        var d = new Date();
+        var STRING_ID = 0
+        var STRING_LANGUAGE = getRadioValueBy("language") || 1
+        var output = ""
+        if (selectedPlatform == "iOS") {
+            //iOS
+            output = "// Last updated: " + d.toLocaleString() + "<br>"
+            for (var currentRow = 1; currentRow < data.length; currentRow++) {
+                var name = data[currentRow][STRING_ID]
+                var value = data[currentRow][STRING_LANGUAGE]
+                value = backSlashAndQuoteReplace(value)
+                value = iOSParamsReplace(value)
+                if (value.length > 0 && name.length > 0) {
+                    // "key" = "value"; <br>
+                    output = output + "\"" + name + "\" = \"" + value + "\";"
+                    output = output + "<br>"
+                } else if (name.length > 0) {
+                    //<br> Comment <br>
+                    output = output + "<br>" + name + "<br>"
+                } else {
+                    output = "EMPTY" + "<br>"
+                }
+                output = output + "<br>"
+            }
         } else {
-          output += stringTag(androidStringClean(data[currentRow][STRING_ID]), data[currentRow][STRING_LANGUAGE]) + "<br>"
+            //Android
+            var lessThanString = "&#60;"
+            var greaterThanString = "&#62;"
+            var newLineString = "<br>"
+            var gtnewLineString = greaterThanString + newLineString
+
+            var output = lessThanString + "?xml version=\"1.0\" encoding=\"utf-8\"?" + gtnewLineString
+            output += lessThanString + "resources" + gtnewLineString
+
+            var withinMultiLine = false
+            for (var currentRow = 1; currentRow < data.length; currentRow++) {
+                var currentValue = data[currentRow][STRING_ID]
+                var isEndOfMultiLine = isEndOfMultiLineComment(currentValue)
+                var isStartOfMultiLine = isStartOfMultiLineComment(currentValue)
+
+                if (currentValue.length > 0) {
+                    if (isEndOfMultiLine || withinMultiLine || isStartOfMultiLine) {
+                        if (isStartOfMultiLine) {
+                            withinMultiLine = true
+                            output += "&#60;!-- "
+                        }
+
+                        output += data[currentRow][1] + "<br>"
+
+                        if (isEndOfMultiLine) {
+                            withinMultiLine = false
+                            output += " --&#62;<br>"
+                        }
+                    } else if (isSingleLineComment(currentValue)) {
+                        output += xmlCommentTag(data[currentRow][0]) + "<br>"
+                    } else {
+                        output += stringTag(androidStringClean(data[currentRow][STRING_ID]), data[currentRow][STRING_LANGUAGE]) + "<br>"
+                    }
+                }
+            }
+            output += lessThanString + "/resources" + gtnewLineString
         }
-      }
+        return output;
     }
-    output += lessThanString + "/resources" + gtnewLineString
-  }
-  console.log(output)
-  document.getElementById("copyData").innerHTML = output;
-}
 
-function getRadioValueBy(name){
-    var radios = document.getElementsByName(name);
-    var value;
-    for (var i = 0; i < radios.length; i++) {
-        if (radios[i].type === 'radio' && radios[i].checked) {
-            // get value, set checked flag or do whatever you need to
-            return radios[i].value;
+    function getRadioValueBy(name) {
+        var radios = document.getElementsByName(name);
+        var value;
+        for (var i = 0; i < radios.length; i++) {
+            if (radios[i].type === 'radio' && radios[i].checked) {
+                // get value, set checked flag or do whatever you need to
+                return radios[i].value;
+            }
         }
+        return ""
     }
-    return ""
-}
 
 
-function copyToClipboard(element) {
-  var text = $(element).clone().find('br').prepend('\r\n').end().text()
-  element = $('<textarea>').appendTo('body').val(text).select()
-  document.execCommand('copy')
-  element.remove()
-}
+    function copyToClipboard(element) {
+        var text = $(element).clone().find('br').prepend('\r\n').end().text()
+        element = $('<textarea>').appendTo('body').val(text).select()
+        document.execCommand('copy')
+        element.remove()
+    }
 
-function isSingleLineComment(textValue) {
-  return textValue.indexOf("//") == 0
-}
+    function isSingleLineComment(textValue) {
+        return textValue.indexOf("//") == 0
+    }
 
-function isStartOfMultiLineComment(textValue) {
-  return textValue.indexOf("/*") == 0
-}
+    function isStartOfMultiLineComment(textValue) {
+        return textValue.indexOf("/*") == 0
+    }
 
-function isEndOfMultiLineComment(textValue) {
-  return textValue.indexOf("*/") == 0
-}
+    function isEndOfMultiLineComment(textValue) {
+        return textValue.indexOf("*/") == 0
+    }
 
-function androidStringClean(name) {
-  return name.replace(/\./g, ".")
-}
+    function androidStringClean(name) {
+        return name.replace(/\./g, ".")
+    }
 
-function backSlashAndQuoteReplace(name) {
-  var text = name.replace(/\\/, "{slash}");
-  text = text.replace(/"/g, "{doublequote}");
-  text = text.replace(/{doublequote}/g, '\\"');
-  return text.replace(/{slash}/g, '\\\\');
-}
+    function backSlashAndQuoteReplace(name) {
+        var text = name.replace(/\\/, "{slash}");
+        text = text.replace(/"/g, "{doublequote}");
+        text = text.replace(/{doublequote}/g, '\\"');
+        return text.replace(/{slash}/g, '\\\\');
+    }
 
-function iOSParamsReplace(name) {
-   var text = name.replace(/{string}/, "%@");
-  return text.replace(/{number}/, "%@");
-}
+    function iOSParamsReplace(name) {
+        var text = name.replace(/{string}/, "%@");
+        return text.replace(/{number}/, "%@");
+    }
 
-function androidParamsReplace(name) {
-  var text = name.replace(/{string}/, "$s");
-   return text.replace(/{number}/, "$d");
-}
+    function androidParamsReplace(name) {
+        var text = name.replace(/{string}/, "$s");
+        return text.replace(/{number}/, "$d");
+    }
 
-function xmlCommentTag(comment) {
-  var fixedComment = comment
-  if (fixedComment.indexOf("//") == 0) {
-    fixedComment = comment.substring(2)
-  }
+    function xmlCommentTag(comment) {
+        var fixedComment = comment
+        if (fixedComment.indexOf("//") == 0) {
+            fixedComment = comment.substring(2)
+        }
 
-  return "<br>    &#60;!-- " + fixedComment + " --&#62;"
-}
+        return "<br>    &#60;!-- " + fixedComment + " --&#62;"
+    }
 
-function stringTag(name, value) {
-  var v = backSlashAndQuoteReplace(value)
-  v = androidParamsReplace(v)
-  return "    &#60;string name=\"" + name + "\"&#62;" + "\"" + v + "\"" +"&#60;/string&#62;"
-}
+    function stringTag(name, value) {
+        var v = backSlashAndQuoteReplace(value)
+        v = androidParamsReplace(v)
+        return "    &#60;string name=\"" + name + "\"&#62;" + "\"" + v + "\"" + "&#60;/string&#62;"
+    }
 </script>
