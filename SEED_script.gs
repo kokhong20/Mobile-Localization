@@ -3,20 +3,20 @@ var HEADER_LIST = [];
 function onOpen() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var menuEntries = [{
-        name: "Copy",
-        functionName: "copy"
+        name: "Copy And Export",
+        functionName: "copyAndExport"
     }];
     ss.addMenu("Localization", menuEntries);
 
 }
 
-function copy() {
+function copyAndExport() {
     var html = HtmlService.createTemplateFromFile('Index')
         .evaluate()
         .setWidth(700)
         .setHeight(600);
     SpreadsheetApp.getUi() // Or DocumentApp or FormApp.
-        .showModalDialog(html, 'Copy');
+        .showModalDialog(html, 'Copy And Export');
 }
 
 function include(filename) {
