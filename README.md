@@ -1,10 +1,17 @@
 # Mobile-Localization
 
-1. Only file owner can export the spreadsheet as xml/strings file, so if you don't have the ownership, just make a copy
-of the spreadsheet to your Google Drive and then execute the export function.
+1. Create a spreadsheet *Only file owner can export the spreadsheet as xml/strings file, so please make sure you have the permission.*
 
-2. In order to export the xml/strings object, do freeze the first row(select first row, then View -> Freeze -> 1 row)
+2. Open Tools->Script editor and create three files: Index.html, Javascript.html, and SEED_script.gs
 
-3. Select the rows you want to use as string name and value respectively.
+3. Copy and paste codes from those three files from this git repo
 
-4. You can also select the range you want to export before you trigger the export function.
+4. Save all in the Google Spreadsheet Script Editor
+
+5. Go back to the spreadsheet and refresh
+
+6. You should be able to see a Localization option in the menu bar, click it
+
+7. Select the platform and language
+
+8. Click refresh in the dialog to see the updated result *xml/strings files are generated in the same folder at the same time* 
