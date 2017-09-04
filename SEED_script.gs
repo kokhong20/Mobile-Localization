@@ -25,8 +25,10 @@ function include(filename) {
 }
 
 //Save Usage
-function saveResult(title, content, fileType) {
+function saveResult(content, fileType) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getActiveSheet();
+    var name = sheet.getName();
     // get the folder this spreadsheet locates in
     var thisFileId = SpreadsheetApp.getActive().getId();
     var thisFile = DriveApp.getFileById(thisFileId);
@@ -36,7 +38,7 @@ function saveResult(title, content, fileType) {
     var re = new RegExp(find, 'g');
     if (fileType == "Android") {
         // append ".xml" extension to the sheet name
-        fileName = "Android_" + title + '_' + dateFormat(d) + ".xml";
+        fileName = "Android_" + name + '_' + dateFormat(d) + ".xml";
         find = '&#60;';
         re = new RegExp(find, 'g');
         content = content.replace(re, "<");
@@ -45,7 +47,7 @@ function saveResult(title, content, fileType) {
         content = content.replace(re, ">");
     } else {
         // append ".strings" extension to the sheet name
-        fileName = "iOS_" + title + '_' + dateFormat(d) + ".strings";
+        fileName = "iOS_" + name + '_' + dateFormat(d) + ".strings";
     }
     find = '<br>';
     re = new RegExp(find, 'g');
@@ -58,7 +60,7 @@ function saveResult(title, content, fileType) {
 //COPY usage
 function getData() {
     var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet()
-    var sheet = activeSpreadsheet.getSheetByName("Copy Deck")
+    var sheet = activeSpreadsheet.getActiveSheet()
 
     var activeRange = sheet.getDataRange()
     var data = activeRange.getValues()
@@ -68,7 +70,7 @@ function getData() {
 
 function getHeader() {
     var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet()
-    var sheet = activeSpreadsheet.getSheetByName("Copy Deck")
+    var sheet = activeSpreadsheet.getActiveSheet()
 
     var headersRange = sheet.getRange(1, 1, sheet.getFrozenRows(), sheet.getMaxColumns());
     var headers = headersRange.getValues()[0];

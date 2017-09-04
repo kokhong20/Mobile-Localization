@@ -22,7 +22,7 @@
         var selectedPlatformRadio = getRadioValueBy("platform") || 1
         var selectedPlatform = selectedPlatformRadio == 1 ? "iOS" : "Android";
         var result = getFormattedData(data, selectedPlatform);
-        google.script.run.saveResult("BKash", result, selectedPlatform);
+        google.script.run.saveResult(result, selectedPlatform);
         console.log(result)
         document.getElementById("copyData").innerHTML = result;
     }
