@@ -1,6 +1,6 @@
 # Mobile-Localization
 
-1. Create a spreadsheet *Only file owner can export the spreadsheet as xml/strings file, so please make sure you have the permission.*
+1. Create a spreadsheet *[Only file owner can export the spreadsheet as xml/strings file, so please make sure you have the permission.]*
 
 2. Open Tools->Script editor and create three files: Index.html, Javascript.html, and SEED_script.gs
 
@@ -14,4 +14,4 @@
 
 7. Select the platform and language
 
-8. Click refresh in the dialog to see the updated result *xml/strings files are generated in the same folder at the same time* 
+8. Click refresh in the dialog to see the updated result *[xml/strings files are generated in the same folder at the same time]* 
