@@ -59,8 +59,8 @@
             var newLineString = "<br>"
             var gtnewLineString = greaterThanString + newLineString
 
-            var output = lessThanString + "?xml version=\"1.0\" encoding=\"utf-8\"?" + gtnewLineString
-            output += lessThanString + "resources" + gtnewLineString
+            var output = lessThanString + "resources" + gtnewLineString
+            output += lessThanString + "!-- Last updated: " + d.toLocaleString() + " --"+gtnewLineString
 
             var withinMultiLine = false
             for (var currentRow = 1; currentRow < data.length; currentRow++) {
