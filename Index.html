@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <?!= include('Stylesheet.html'); ?>
     <base target="_top">
   </head>
   <body>
-    <p>
+  <div class="w3-container w3-orange">
+      <h2>Localization</h2>
+   </div>
+    <p class="w3-container">
       Which platform?<br>
-      <input type="radio" name="platform" id ="platform_ios" value=1 checked> iOS
-      <input type="radio" name="platform" id ="platform_android" value=0 >Android
+      <input class="w3-radio" type="radio" name="platform" id ="platform_ios" value=1 checked> iOS &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+      <input class="w3-radio" type="radio" name="platform" id ="platform_android" value=0 >Android
     </p>
-    <p id="language">
-
+    <p id="language" class="w3-container">
     </p>
-    <button onclick="refresh()">Refresh </button>
-    <button onclick="copyToClipboard('#copyData')">Copy to Clipboard</button>
+    <button onclick="refresh()" class="w3-btn w3-orange">Refresh</button>
+    <button onclick="copyToClipboard('#copyData')" class="w3-btn w3-orange">Copy to Clipboard</button> <div class="done">Copied!</div>
     <hr>
     <p>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-      <div id="copyData" contenteditable="true">
+      <div id="copyData" contenteditable="true" class="w3-container">
        Empty copy text
       </div>
     </p>
     <?!= include('JavaScript'); ?>
   </body>
+
 </html>
