@@ -13,7 +13,7 @@
 
         for (var currentHeader = 1; currentHeader < headerList.length; currentHeader++) {
             let checked = (currentHeader == 1) ? "checked" : ""
-            html = html + "<input type=\"radio\" name=\"language\" value=" + currentHeader + " " + checked + ">" + headerList[currentHeader]
+            html = html + "<input class=\"w3-radio\" type=\"radio\" name=\"language\" value="+ currentHeader +" "+ checked+ ">" + titleCase(headerList[currentHeader]) + "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"
         }
         document.getElementById("language").innerHTML = html;
     }
@@ -111,6 +111,7 @@
         element = $('<textarea>').appendTo('body').val(text).select()
         document.execCommand('copy')
         element.remove()
+        displayDone()
     }
 
     function isSingleLineComment(textValue) {
@@ -159,5 +160,20 @@
         var v = backSlashAndQuoteReplace(value)
         v = androidParamsReplace(v)
         return "    &#60;string name=\"" + name + "\"&#62;" + "\"" + v + "\"" + "&#60;/string&#62;"
+    }
+    
+    function titleCase(str) {
+      var newstr = str.split(" ");
+      for(i=0;i<newstr.length;i++){
+        if(newstr[i] == "") continue;
+        var copy = newstr[i].substring(1).toLowerCase();
+        newstr[i] = newstr[i][0].toUpperCase() + copy;
+      }
+       newstr = newstr.join(" ");
+       return newstr;
+    }  
+    
+    function displayDone(){
+        $(".done").fadeIn().delay(3000).fadeOut();
     }
 </script>
