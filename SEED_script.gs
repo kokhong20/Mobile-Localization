@@ -1,4 +1,8 @@
 var HEADER_LIST = [];
+var ANDROID_FOLDER_NAME = "values";
+var ANDROID_FILE_NAME = "string.xml";
+var iOS_FOLDER_NAME = "Base.lproj";
+var iOS_FILE_NAME = "Localizable.strings";
 
 function onOpen() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -37,24 +41,38 @@ function saveResult(content, fileType) {
     var find = '';
     var re = new RegExp(find, 'g');
     if (fileType == "Android") {
-        // append ".xml" extension to the sheet name
-        fileName = "Android_" + name + '_' + dateFormat(d) + ".xml";
-        find = '&#60;';
-        re = new RegExp(find, 'g');
-        content = content.replace(re, "<");
-        find = '&#62;';
-        re = new RegExp(find, 'g');
-        content = content.replace(re, ">");
+        content = formatBeautifier(content, '&#60;', '<');
+        content = formatBeautifier(content, '&#62;', '>');
+        content = formatBeautifier(content, '<br>', '\n');
+
+        var folders = folder.getFolders();
+        while (folders.hasNext()) {
+            var childFolder = folders.next();
+            if (childFolder.getName() == ANDROID_FOLDER_NAME) {
+                folder.removeFolder(childFolder);
+            }
+        };
+        var subFolder = folder.createFolder(ANDROID_FOLDER_NAME);
+        subFolder.createFile(ANDROID_FILE_NAME, content);
     } else {
-        // append ".strings" extension to the sheet name
-        fileName = "iOS_" + name + '_' + dateFormat(d) + ".strings";
+        content = formatBeautifier(content, '<br>', '\n');
+
+        var folders = folder.getFolders();
+        while (folders.hasNext()) {
+            var childFolder = folders.next();
+            if (childFolder.getName() == iOS_FOLDER_NAME) {
+                folder.removeFolder(childFolder);
+            }
+        }
+        var subFolder = folder.createFolder(iOS_FOLDER_NAME);
+        subFolder.createFile(iOS_FILE_NAME, content);
     }
-    find = '<br>';
-    re = new RegExp(find, 'g');
-    content = content.replace(re, "\n");
     Logger.log("Content:" + content);
-    // create a file in the Folder with the given name and the content
-    folder.createFile(fileName, content);
+}
+
+function formatBeautifier(source, target, replacement) {
+    var re = new RegExp(target, 'g');
+    return source.replace(re, replacement);
 }
 
 //COPY usage
