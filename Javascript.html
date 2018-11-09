@@ -32,23 +32,24 @@
         var STRING_ID = 0
         var STRING_LANGUAGE = getRadioValueBy("language") || 1
         var output = ""
+        
         if (selectedPlatform == "iOS") {
             //iOS
-            output = "// Last updated: " + d.toLocaleString() + "<br>"
+            output = "// Last updated: " + d.toLocaleString() + "<br>";
+            
             for (var currentRow = 1; currentRow < data.length; currentRow++) {
-                var name = data[currentRow][STRING_ID]
-                var value = data[currentRow][STRING_LANGUAGE]
-                value = backSlashAndQuoteReplace(value)
-                value = iOSParamsReplace(value)
+                var name = data[currentRow][STRING_ID].toString();
+                var value = data[currentRow][STRING_LANGUAGE].toString();
+               
+                value = backSlashAndQuoteReplace(value);
+                value = iOSParamsReplace(value);
+                
                 if (value.length > 0 && name.length > 0) {
                     // "key" = "value"; <br>
                     output = output + "\"" + name + "\" = \"" + value + "\";"
                     output = output + "<br>"
-                } else if (name.length > 0) {
-                    //<br> Comment <br>
-                    output = output + "<br>" + name + "<br>"
-                } else {
-                    output = "EMPTY" + "<br>"
+                }else {
+                    output = "ERROR at row".fontcolor("red") + currentRow + "<br>" + output + "EMPTY".fontcolor("red") + "<br>"
                 }
                 output = output + "<br>"
             }
@@ -64,11 +65,13 @@
 
             var withinMultiLine = false
             for (var currentRow = 1; currentRow < data.length; currentRow++) {
-                var currentValue = data[currentRow][STRING_ID]
-                var isEndOfMultiLine = isEndOfMultiLineComment(currentValue)
-                var isStartOfMultiLine = isStartOfMultiLineComment(currentValue)
+                var name = data[currentRow][STRING_ID].toString();
+                var value = data[currentRow][STRING_LANGUAGE].toString();
+                
+                var isEndOfMultiLine = isEndOfMultiLineComment(name)
+                var isStartOfMultiLine = isStartOfMultiLineComment(name)
 
-                if (currentValue.length > 0) {
+                if (name.length > 0) {
                     if (isEndOfMultiLine || withinMultiLine || isStartOfMultiLine) {
                         if (isStartOfMultiLine) {
                             withinMultiLine = true
@@ -81,15 +84,18 @@
                             withinMultiLine = false
                             output += " --&#62;<br>"
                         }
-                    } else if (isSingleLineComment(currentValue)) {
+                    } else if (isSingleLineComment(name)) {
                         output += xmlCommentTag(data[currentRow][0]) + "<br>"
                     } else {
-                        output += stringTag(androidStringClean(data[currentRow][STRING_ID]), data[currentRow][STRING_LANGUAGE]) + "<br>"
+                        output += stringTag(androidStringClean(name), value) + "<br>"
                     }
+                }else {
+                    output = "ERROR at row".fontcolor("red") + currentRow + "<br>" + output + "EMPTY".fontcolor("red") + "<br>"
                 }
             }
             output += lessThanString + "/resources" + gtnewLineString
         }
+        
         return output;
     }
 
