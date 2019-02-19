@@ -1,7 +1,7 @@
 var HEADER_LIST = [];
-var ANDROID_FOLDER_NAME = "values";
+var ANDROID_FOLDER_NAME = "Android";
 var ANDROID_FILE_NAME = "string.xml";
-var iOS_FOLDER_NAME = "Base.lproj";
+var iOS_FOLDER_NAME = "iOS";
 var iOS_FILE_NAME = "Localizable.strings";
 
 function onOpen() {
@@ -80,16 +80,24 @@ function getData() {
     var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet()
     var sheet = activeSpreadsheet.getActiveSheet()
 
-    var activeRange = sheet.getDataRange()
-    var data = activeRange.getValues()
-    return (data);
+    var activeRange = sheet.getDataRange();
+    var data = activeRange.getValues();
+    var array = [];
+    for(var i = 0; i < data.length; i ++) {
+       // Ignore first two columns for checking merge cell.
+       var isMerge = sheet.getRange(i + 1, 3, 1, sheet.getMaxColumns()).isPartOfMerge();
+       array.push({
+        "isMerge": isMerge,
+        "data": data[i]
+       });
+    }
+    return array;
 }
 
-
 function getHeader() {
+  
     var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet()
     var sheet = activeSpreadsheet.getActiveSheet()
-
     var headersRange = sheet.getRange(1, 1, sheet.getFrozenRows(), sheet.getMaxColumns());
     var headers = headersRange.getValues()[0];
     HEADER_LIST = normalizeHeaders_(headers);
@@ -187,4 +195,12 @@ function dateFormat(d) {
         fileName += '' + d.getMinutes()
     }
     return fileName;
+}
+
+function highlightRow(row) {
+    var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = activeSpreadsheet.getActiveSheet();
+    var range = sheet.getRange(row + 1, 1, 1, sheet.getMaxColumns());
+  
+    range.setBackground("yellow");
 }

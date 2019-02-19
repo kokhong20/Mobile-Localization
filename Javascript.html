@@ -1,4 +1,6 @@
 <script>
+
+    window.keysObject = {};
     window.onload = function() {
         google.script.run.withSuccessHandler(populateHTMLwith).getHeader();
         google.script.run.withSuccessHandler(showData).getData();
@@ -9,10 +11,13 @@
     }
 
     function populateHTMLwith(headerList) {
-        var html = "Which language?<br>"
-
-        for (var currentHeader = 1; currentHeader < headerList.length; currentHeader++) {
-            let checked = (currentHeader == 1) ? "checked" : ""
+        var html = "Which language?<br>";
+        var leftReservedColumns = 3;
+        var rightReservedColumns = 2;
+        // Always start with 3 as the first 3 columns are reserve as reserved columns.
+        // Always less than headerList.length - 2 as last two columns are reserved as remark and status
+        for (var currentHeader = leftReservedColumns; currentHeader < headerList.length - rightReservedColumns; currentHeader++) {
+            let checked = (currentHeader == leftReservedColumns) ? "checked" : ""
             html = html + "<input class=\"w3-radio\" type=\"radio\" name=\"language\" value="+ currentHeader +" "+ checked+ ">" + titleCase(headerList[currentHeader]) + "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"
         }
         document.getElementById("language").innerHTML = html;
@@ -28,28 +33,49 @@
     }
 
     function getFormattedData(data, selectedPlatform) {
+        var DATAKEY = "data";
+        var ISMERGEKEY = "isMerge";
         var d = new Date();
-        var STRING_ID = 0
-        var STRING_LANGUAGE = getRadioValueBy("language") || 1
-        var output = ""
+        var COMPONENT_ID = 2;
+        var PAGE_ID = 1;
+        var currentPage = "";
         
+        var STRING_LANGUAGE = getRadioValueBy("language") || 1
+        var output = "";
+
         if (selectedPlatform == "iOS") {
             //iOS
-            output = "// Last updated: " + d.toLocaleString() + "<br>";
-            
+            output = "// Last updated: " + d.toLocaleString() + "<br>"
             for (var currentRow = 1; currentRow < data.length; currentRow++) {
-                var name = data[currentRow][STRING_ID].toString();
-                var value = data[currentRow][STRING_LANGUAGE].toString();
-               
-                value = backSlashAndQuoteReplace(value);
-                value = iOSParamsReplace(value);
-                
-                if (value.length > 0 && name.length > 0) {
+                if(data[currentRow][ISMERGEKEY]) {
+                   continue;
+                }
+                var page = data[currentRow][DATAKEY][PAGE_ID];
+                var component = data[currentRow][DATAKEY][COMPONENT_ID];
+                if (page.length === 0 ) {
+                   page = currentPage;
+                } else {
+                   currentPage = page;
+                }
+
+                if(page.length === 0 || component.length === 0) {
+                    continue;
+                }
+                var name = page + "." + component;
+                populateKeyObjects(name, currentRow);
+                var value = data[currentRow][DATAKEY][STRING_LANGUAGE]
+                value = backSlashAndQuoteReplace(value)
+                value = iOSParamsReplace(value)
+                if (name.length > 0) {
                     // "key" = "value"; <br>
+                    value = value.length == 0 ? "" : value;
                     output = output + "\"" + name + "\" = \"" + value + "\";"
                     output = output + "<br>"
-                }else {
-                    output = "ERROR at row".fontcolor("red") + currentRow + "<br>" + output + "EMPTY".fontcolor("red") + "<br>"
+                } else if (name.length > 0) {
+                    //<br> Comment <br>
+                    output = output + "<br>" + name + "<br>"
+                } else {
+                    output = "EMPTY" + "<br>"
                 }
                 output = output + "<br>"
             }
@@ -65,37 +91,35 @@
 
             var withinMultiLine = false
             for (var currentRow = 1; currentRow < data.length; currentRow++) {
-                var name = data[currentRow][STRING_ID].toString();
-                var value = data[currentRow][STRING_LANGUAGE].toString();
+                if(data[currentRow][ISMERGEKEY]) {
+                   continue;
+                }
+                var page = data[currentRow][DATAKEY][PAGE_ID];
+                var component = data[currentRow][DATAKEY][COMPONENT_ID];
+                if (page.length === 0 ) {
+                   page = currentPage;
+                } else {
+                   currentPage = page;
+                }
+            
+                if(page.length === 0 || component.length === 0) {
+                    continue;
+                }
+
+                var currentValue = page + "." + component;
                 
-                var isEndOfMultiLine = isEndOfMultiLineComment(name)
-                var isStartOfMultiLine = isStartOfMultiLineComment(name)
-
-                if (name.length > 0) {
-                    if (isEndOfMultiLine || withinMultiLine || isStartOfMultiLine) {
-                        if (isStartOfMultiLine) {
-                            withinMultiLine = true
-                            output += "&#60;!-- "
-                        }
-
-                        output += data[currentRow][1] + "<br>"
-
-                        if (isEndOfMultiLine) {
-                            withinMultiLine = false
-                            output += " --&#62;<br>"
-                        }
-                    } else if (isSingleLineComment(name)) {
-                        output += xmlCommentTag(data[currentRow][0]) + "<br>"
-                    } else {
-                        output += stringTag(androidStringClean(name), value) + "<br>"
-                    }
-                }else {
-                    output = "ERROR at row".fontcolor("red") + currentRow + "<br>" + output + "EMPTY".fontcolor("red") + "<br>"
+                populateKeyObjects(currentValue, currentRow);
+                var isEndOfMultiLine = isEndOfMultiLineComment(currentValue);
+                var isStartOfMultiLine = isStartOfMultiLineComment(currentValue);
+                if (currentValue.length > 0) {
+                    output += stringTag(androidStringClean(currentValue), data[currentRow][DATAKEY][STRING_LANGUAGE]) + "<br>";
                 }
             }
             output += lessThanString + "/resources" + gtnewLineString
+            
         }
         
+        checkAndHighlightRow();
         return output;
     }
 
@@ -145,12 +169,12 @@
 
     function iOSParamsReplace(name) {
         var text = name;
-        text = text.split('{string}').join('%@');
+        text = text.split('{text}').join('%@');
         text = text.split('{number}').join('%@');
-        var i = occurrences(text, "{string}");
+        var i = occurrences(text, "{text}");
         while (i > 0) {
            i--;
-           text = text.replace(/{string}/, "%@");
+           text = text.replace(/{text}/, "%@");
          }
 
         var j = occurrences(text, "{number}");
@@ -164,11 +188,11 @@
 
     function androidParamsReplace(name) {
         var text = name;
-        var i = occurrences(text, "{string}");
+        var i = occurrences(text, "{text}");
         var count = 0
         while (count < i) {
            count++;
-           text = text.replace(/{string}/, "%"+ count +"$s");
+           text = text.replace(/{text}/, "%"+ count +"$s");
          }
 
         var j = occurrences(text, "{number}");
@@ -209,10 +233,19 @@
     function displayDone(){
         $(".done").fadeIn().delay(3000).fadeOut();
     }
+    
+    function populateKeyObjects(key, row) {
+        var data = window.keysObject[key];
+        if(data === undefined) {
+           window.keysObject[key] = [row];
+        } else {
+           data.push(row);
+        }
+    }
 
     /** Function that count occurrences of a substring in a string;
-     * @param {String} string               The string
-     * @param {String} subString            The sub string to search for
+     * @param {text} string               The string
+     * @param {text} subString            The sub string to search for
      * @param {Boolean} [allowOverlapping]  Optional. (Default:false)
      *
      * @author Vitim.us https://gist.github.com/victornpb/7736865
@@ -221,21 +254,34 @@
      */
     function occurrences(string, subString, allowOverlapping) {
 
-    string += "";
-    subString += "";
-    if (subString.length <= 0) return (string.length + 1);
+        string += "";
+        subString += "";
+        if (subString.length <= 0) return (string.length + 1);
 
-    var n = 0,
-        pos = 0,
-        step = allowOverlapping ? 1 : subString.length;
+        var n = 0,
+            pos = 0,
+            step = allowOverlapping ? 1 : subString.length;
 
-    while (true) {
-        pos = string.indexOf(subString, pos);
-        if (pos >= 0) {
-            ++n;
-            pos += step;
-        } else break;
+        while (true) {
+            pos = string.indexOf(subString, pos);
+            if (pos >= 0) {
+                ++n;
+                pos += step;
+            } else break;
+        }
+        return n;
     }
-    return n;
-}
+
+    function checkAndHighlightRow() {
+        Object.values(window.keysObject).map(function(e) {
+           if(e.length > 1) {
+              e.forEach(function(data) {
+                 google.script.run.highlightRow(data);
+              });
+           }
+        });
+
+        window.keysObject = {};
+    }
 </script>
+
